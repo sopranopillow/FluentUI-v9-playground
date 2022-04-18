@@ -18,37 +18,62 @@ import { HTML5Backend } from "react-dnd-html5-backend";
  * - filter components and unstable_components to remove hooks and such
  */
 
-const controlTypes = Object.keys(components);
+const controlTypes = [
+  ...Object.keys(components),
+  ...Object.keys(unstable_components),
+];
+const controls = { ...components, ...unstable_components };
 
 function App() {
   const [container, setContainer] = useState<ReactNode[]>([]);
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <components.FluentProvider theme={components.webLightTheme}>
+      <controls.FluentProvider theme={controls.webLightTheme}>
         <div className="container">
           <div className="leftPanel">
-            {Object.keys(components).map((c) => (
+            {Object.keys(controls).map((c, k) => (
               <DropItem controlType={c}>
-                <unstable_components.Label>{c}</unstable_components.Label>
+                <controls.Label>{c}</controls.Label>
               </DropItem>
             ))}
-            {/* {Object.keys(unstable_components).map((c) => (
-            <DropItem>
-              <Label>{c}</Label>
-            </DropItem>
-          ))} */}
-            {/* <components.Button appearance="primary">Hello</components.Button> */}
           </div>
           <div className="canvas">
             <Toolbar container={container} setContainer={setContainer} />
             {container}
           </div>
         </div>
-      </components.FluentProvider>
+      </controls.FluentProvider>
     </DndProvider>
   );
 }
+
+type ComponentOverlayProps = {
+  children: ReactNode;
+};
+
+const ComponentOverlay: React.FC<ComponentOverlayProps> = ({ children }) => {
+  if (!React.isValidElement(children)) {
+    return null;
+  }
+  //@ts-ignore
+  console.log(children.type.displayName, ...typeof controls.Button);
+  // from here we can access its props and having some kind of popover or something we could populate it to modify the props.
+  // The only problem is figuring out how to remove the unncessesary ones
+  // we could do something like what devtools has that you can add color: #33333, this way we don't have to populate it with all the props
+
+  return (
+    <div className="overlay">
+      <div className="overlayChild">{children}</div>
+      <controls.Popover>
+        <controls.PopoverTrigger>
+          <controls.Button>Edit</controls.Button>
+        </controls.PopoverTrigger>
+        <controls.PopoverSurface></controls.PopoverSurface>
+      </controls.Popover>
+    </div>
+  );
+};
 
 type ToolbarProps = {
   container: any;
@@ -58,11 +83,11 @@ type ToolbarProps = {
 const Toolbar: React.FC<ToolbarProps> = ({ container, setContainer }) => {
   return (
     <div className="toolbar">
-      <components.Button
+      <controls.Button
         onClick={() => setContainer([...container, <DropContainer />])}
       >
         Add Container
-      </components.Button>
+      </controls.Button>
     </div>
   );
 };
@@ -83,8 +108,12 @@ const DropContainer: React.FC<DropContainerProps> = ({ children }) => {
         const controlType = monitor.getItemType();
         if (controlType) {
           // @ts-ignore
-          const Component = components[controlType];
-          setControl(<Component></Component>);
+          const Component = controls[controlType];
+          setControl(
+            <ComponentOverlay>
+              <Component />
+            </ComponentOverlay>
+          );
         }
       },
     }),

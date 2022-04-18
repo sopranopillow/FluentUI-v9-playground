@@ -9,7 +9,8 @@
   background-color: lightgray;
   min-width: 'fit-content';
   gap: 10px;
-  overflow: scroll;
+  overflow-y: scroll;
+  overflow-x: hidden;
   max-height: 100vh;
 }
 
@@ -22,8 +23,9 @@
 }
 
 .dropContainer {
-  min-width: 10px;
-  min-height: 10px;
+  padding: 5px;
+  min-width: 40px;
+  min-height: 40px;
   border-color:greenyellow;
   border-style: solid;
   border-width: 2px;
@@ -31,4 +33,18 @@
 
 .toolbar {
   width: 100%;
+}
+
+.overlayChild {
+  box-sizing: border-box;
+  border-color:blueviolet;
+  border-style: solid;
+  border-width: 2px;
+  padding: 5px;
+}
+
+.overlay {
+  padding: 5px;
+  display: flex;
+  flex-direction: row;
 }
