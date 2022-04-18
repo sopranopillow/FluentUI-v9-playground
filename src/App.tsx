@@ -1,6 +1,7 @@
 import React, { ReactNode } from "react";
 import "./App.css";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { propObject } from "./propObjects";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import {
   Accordion,
@@ -40,6 +41,7 @@ import {
   Slider,
   TabList,
 } from "@fluentui/react-components/unstable";
+import { Identifier } from "typescript";
 
 /**
  * - figure out how to add props to the components, would be nice to have a popover on hover and then change them there
@@ -131,21 +133,27 @@ function App() {
 
 type ComponentOverlayProps = {
   children: ReactNode;
+  controlType: any;
 };
 
-const ComponentOverlay: React.FC<ComponentOverlayProps> = ({ children }) => {
-  if (!React.isValidElement(children)) {
-    return null;
+const ComponentOverlay: React.FC<ComponentOverlayProps> = ({
+  controlType,
+  children,
+}) => {
+  let child = children;
+
+  if (
+    propObject[controlType as keyof typeof propObject].hasChildren &&
+    React.isValidElement(children)
+  ) {
+    child = React.cloneElement(children, {
+      children: <DropContainer />,
+    });
   }
-  //@ts-ignore
-  console.log(children.type.displayName, ...typeof Button);
-  // from here we can access its props and having some kind of popover or something we could populate it to modify the props.
-  // The only problem is figuring out how to remove the unncessesary ones
-  // we could do something like what devtools has that you can add color: #33333, this way we don't have to populate it with all the props
 
   return (
     <div className="overlay">
-      <div className="overlayChild">{children}</div>
+      <div className="overlayChild">{child}</div>
       <Popover>
         <PopoverTrigger>
           <Button>Edit</Button>
@@ -192,7 +200,7 @@ const DropContainer: React.FC<DropContainerProps> = ({ children }) => {
             stableComponents[controlType] || unstableComponents[controlType];
           setControls([
             ...controls,
-            <ComponentOverlay>
+            <ComponentOverlay controlType={controlType}>
               <Component />
             </ComponentOverlay>,
           ]);
