@@ -1,9 +1,45 @@
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode } from "react";
 import "./App.css";
-import * as components from "@fluentui/react-components";
-import * as unstable_components from "@fluentui/react-components/unstable";
 import { DndProvider, useDrag, useDrop } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import {
+  Accordion,
+  AccordionHeader,
+  AccordionItem,
+  AccordionPanel,
+  Avatar,
+  Badge,
+  Button,
+  CompoundButton,
+  CounterBadge,
+  Divider,
+  FluentProvider,
+  Image,
+  Link,
+  Menu,
+  MenuButton,
+  MenuList,
+  Popover,
+  PopoverSurface,
+  PopoverTrigger,
+  Portal,
+  PresenceBadge,
+  SplitButton,
+  Text,
+  ToggleButton,
+  Tooltip,
+  webLightTheme,
+} from "@fluentui/react-components";
+
+import {
+  Card,
+  Checkbox,
+  Input,
+  Label,
+  RadioGroup,
+  Slider,
+  TabList,
+} from "@fluentui/react-components/unstable";
 
 /**
  * - figure out how to add props to the components, would be nice to have a popover on hover and then change them there
@@ -18,32 +54,77 @@ import { HTML5Backend } from "react-dnd-html5-backend";
  * - filter components and unstable_components to remove hooks and such
  */
 
+const stableComponents = {
+  Accordion,
+  Avatar,
+  Badge,
+  Button,
+  CompoundButton,
+  CounterBadge,
+  Divider,
+  Image,
+  Link,
+  Menu,
+  MenuButton,
+  MenuList,
+  Popover,
+  Portal,
+  PresenceBadge,
+  SplitButton,
+  Text,
+  ToggleButton,
+  Tooltip,
+};
+
+const unstableComponents = {
+  Card,
+  Checkbox,
+  Input,
+  Label,
+  RadioGroup,
+  Slider,
+  TabList,
+};
+
 const controlTypes = [
-  ...Object.keys(components),
-  ...Object.keys(unstable_components),
+  ...Object.keys(stableComponents),
+  ...Object.keys(unstableComponents),
 ];
-const controls = { ...components, ...unstable_components };
 
 function App() {
-  const [container, setContainer] = useState<ReactNode[]>([]);
-
   return (
     <DndProvider backend={HTML5Backend}>
-      <controls.FluentProvider theme={controls.webLightTheme}>
+      <FluentProvider theme={webLightTheme}>
         <div className="container">
           <div className="leftPanel">
-            {Object.keys(controls).map((c, k) => (
-              <DropItem controlType={c}>
-                <controls.Label>{c}</controls.Label>
-              </DropItem>
-            ))}
+            <Accordion collapsible>
+              <AccordionItem value="1">
+                <AccordionHeader>Components</AccordionHeader>
+                <AccordionPanel>
+                  {Object.keys(stableComponents).map((c) => (
+                    <DropItem controlType={c}>
+                      <Label>{c}</Label>
+                    </DropItem>
+                  ))}
+                </AccordionPanel>
+              </AccordionItem>
+              <AccordionItem value="2">
+                <AccordionHeader>Unstable Components</AccordionHeader>
+                <AccordionPanel>
+                  {Object.keys(unstableComponents).map((c) => (
+                    <DropItem controlType={c}>
+                      <Label>{c}</Label>
+                    </DropItem>
+                  ))}
+                </AccordionPanel>
+              </AccordionItem>
+            </Accordion>
           </div>
           <div className="canvas">
-            <Toolbar container={container} setContainer={setContainer} />
-            {container}
+            <DropContainer />
           </div>
         </div>
-      </controls.FluentProvider>
+      </FluentProvider>
     </DndProvider>
   );
 }
@@ -57,7 +138,7 @@ const ComponentOverlay: React.FC<ComponentOverlayProps> = ({ children }) => {
     return null;
   }
   //@ts-ignore
-  console.log(children.type.displayName, ...typeof controls.Button);
+  console.log(children.type.displayName, ...typeof Button);
   // from here we can access its props and having some kind of popover or something we could populate it to modify the props.
   // The only problem is figuring out how to remove the unncessesary ones
   // we could do something like what devtools has that you can add color: #33333, this way we don't have to populate it with all the props
@@ -65,12 +146,12 @@ const ComponentOverlay: React.FC<ComponentOverlayProps> = ({ children }) => {
   return (
     <div className="overlay">
       <div className="overlayChild">{children}</div>
-      <controls.Popover>
-        <controls.PopoverTrigger>
-          <controls.Button>Edit</controls.Button>
-        </controls.PopoverTrigger>
-        <controls.PopoverSurface></controls.PopoverSurface>
-      </controls.Popover>
+      <Popover>
+        <PopoverTrigger>
+          <Button>Edit</Button>
+        </PopoverTrigger>
+        <PopoverSurface></PopoverSurface>
+      </Popover>
     </div>
   );
 };
@@ -83,11 +164,9 @@ type ToolbarProps = {
 const Toolbar: React.FC<ToolbarProps> = ({ container, setContainer }) => {
   return (
     <div className="toolbar">
-      <controls.Button
-        onClick={() => setContainer([...container, <DropContainer />])}
-      >
+      <Button onClick={() => setContainer([...container, <DropContainer />])}>
         Add Container
-      </controls.Button>
+      </Button>
     </div>
   );
 };
@@ -97,8 +176,9 @@ type DropContainerProps = {
 };
 
 const DropContainer: React.FC<DropContainerProps> = ({ children }) => {
-  const [control, setControl] = React.useState<any>(null);
-  const [{ canDrop }, drop] = useDrop(
+  const [controls, setControls] = React.useState<any>([]);
+
+  const [, drop] = useDrop(
     () => ({
       accept: controlTypes,
       collect: (monitor) => ({
@@ -107,23 +187,26 @@ const DropContainer: React.FC<DropContainerProps> = ({ children }) => {
       drop: (item, monitor) => {
         const controlType = monitor.getItemType();
         if (controlType) {
-          // @ts-ignore
-          const Component = controls[controlType];
-          setControl(
+          const Component =
+            // @ts-ignore
+            stableComponents[controlType] || unstableComponents[controlType];
+          setControls([
+            ...controls,
             <ComponentOverlay>
               <Component />
-            </ComponentOverlay>
-          );
+            </ComponentOverlay>,
+          ]);
         }
       },
     }),
-    [setControl]
+    [controls, setControls]
   );
 
   return (
     <div className="dropContainer" ref={drop}>
-      <div>{children}</div>
-      {control}
+      {controls.map((control: any, index: number) => (
+        <div key={`${control.displayName}-${index}`}>{control}</div>
+      ))}
     </div>
   );
 };
@@ -134,7 +217,7 @@ type DropItemProps = {
 };
 
 const DropItem: React.FC<DropItemProps> = ({ children, controlType }) => {
-  const [{ isDragging }, drag, preview] = useDrag(
+  const [, drag] = useDrag(
     () => ({
       type: controlType,
       collect: (monitor) => ({

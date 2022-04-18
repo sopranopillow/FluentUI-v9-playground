@@ -23,6 +23,10 @@
 }
 
 .dropContainer {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  height: 100vh;
   padding: 5px;
   min-width: 40px;
   min-height: 40px;
