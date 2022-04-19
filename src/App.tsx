@@ -70,6 +70,8 @@ const stableComponents = {
   MenuButton,
   MenuList,
   Popover,
+  PopoverSurface,
+  PopoverTrigger,
   Portal,
   PresenceBadge,
   SplitButton,
@@ -132,7 +134,7 @@ function App() {
 }
 
 type ComponentOverlayProps = {
-  children: ReactNode;
+  children: any;
   controlType: any;
 };
 
@@ -140,20 +142,14 @@ const ComponentOverlay: React.FC<ComponentOverlayProps> = ({
   controlType,
   children,
 }) => {
-  let child = children;
-
-  if (
-    propObject[controlType as keyof typeof propObject].hasChildren &&
-    React.isValidElement(children)
-  ) {
-    child = React.cloneElement(children, {
-      children: <DropContainer />,
-    });
+  let extraProps = {};
+  if (propObject[controlType as keyof typeof propObject].hasChildren) {
+    extraProps = { children: <DropContainer /> };
   }
 
   return (
     <div className="overlay">
-      <div className="overlayChild">{child}</div>
+      <div className="overlayChild">{children(extraProps)}</div>
       <Popover>
         <PopoverTrigger>
           <Button>Edit</Button>
@@ -201,7 +197,7 @@ const DropContainer: React.FC<DropContainerProps> = ({ children }) => {
           setControls([
             ...controls,
             <ComponentOverlay controlType={controlType}>
-              <Component />
+              {(extraProps: Object) => <Component {...extraProps} />}
             </ComponentOverlay>,
           ]);
         }

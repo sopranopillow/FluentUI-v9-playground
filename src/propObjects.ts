@@ -1,4 +1,8 @@
 export const propObject = {
+    "Accordion":{
+        hasChildren: true,
+        props: {}
+    },
     "Popover":{
         hasChildren: true,
         props: {}
@@ -10,5 +14,9 @@ export const propObject = {
     "PopoverSurface":{
         hasChildren: true,
         props: {}
-    }
+    },
+    "Button":{
+        hasChildren: false,
+        props: {}
+    },
 }
